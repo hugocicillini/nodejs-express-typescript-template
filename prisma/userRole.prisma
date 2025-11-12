@@ -1,0 +1,18 @@
+model UserRole {
+  id String @id @default(uuid(7))
+
+  userId String
+  roleId String
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  assignedAt DateTime  @default(now())
+  assignedBy String?
+  expiresAt  DateTime?
+  isActive   Boolean   @default(true)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}

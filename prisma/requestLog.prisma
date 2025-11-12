@@ -1,0 +1,52 @@
+enum LogLevel {
+  TRACE
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  FATAL
+}
+
+model RequestLog {
+  id        String @id @default(uuid(7))
+  requestId String // x-request-id header
+
+  // Request data
+  method String // GET, POST, PUT, DELETE, etc.
+  url    String // /api/v1/users
+  path   String? // /api/v1/users/:id (com placeholders)
+  query  Json? // { page: 1, limit: 10 }
+
+  // Response data
+  statusCode     Int // 200, 404, 500, etc.
+  responseTimeMs Int // Tempo de resposta em ms
+
+  // Client data
+  ip        String? // IP do cliente
+  userAgent String? // User-Agent header
+  referer   String? // Referer header
+
+  // Auth data
+  userId String? // ID do usuário autenticado (se houver)
+
+  // Error tracking
+  level        LogLevel @default(INFO)
+  errorMessage String? // Apenas para status >= 400
+  errorStack   String? // Stack trace (apenas erros 500)
+
+  // Opcional: bodies (CUIDADO COM LGPD)
+  requestBody  Json? // Apenas se LOG_BODY_TO_DB=true
+  responseBody Json? // Apenas se LOG_BODY_TO_DB=true
+
+  createdAt DateTime @default(now())
+
+  // Índices para queries eficientes
+  @@index([createdAt])
+  @@index([statusCode])
+  @@index([method])
+  @@index([userId])
+  @@index([ip])
+  @@index([level])
+  @@index([requestId])
+  // @@map("request_logs")
+}
