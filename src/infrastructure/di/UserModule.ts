@@ -10,6 +10,7 @@ import { BcryptPasswordHasher } from "@/infrastructure/services/BcryptPasswordHa
 export class UserModule {
   private static userRepository: PrismaUserRepository;
   private static passwordHasher: BcryptPasswordHasher;
+  private static userController: UserController;
 
   static getUserRepository(): PrismaUserRepository {
     if (!this.userRepository) {
@@ -26,27 +27,30 @@ export class UserModule {
   }
 
   static getUserController(): UserController {
-    const userRepository = this.getUserRepository();
-    const passwordHasher = this.getPasswordHasher();
+    if (!this.userController) {
+      const userRepository = this.getUserRepository();
+      const passwordHasher = this.getPasswordHasher();
 
-    const createUserUseCase = new CreateUserUseCase(
-      userRepository,
-      passwordHasher,
-    );
-    const getAllUsersUseCase = new GetAllUsersUseCase(userRepository);
-    const getUserByIdUseCase = new GetUserByIdUseCase(userRepository);
-    const updateUserUseCase = new UpdateUserUseCase(
-      userRepository,
-      passwordHasher,
-    );
-    const deleteUserUseCase = new DeleteUserUseCase(userRepository);
+      const createUserUseCase = new CreateUserUseCase(
+        userRepository,
+        passwordHasher,
+      );
+      const getAllUsersUseCase = new GetAllUsersUseCase(userRepository);
+      const getUserByIdUseCase = new GetUserByIdUseCase(userRepository);
+      const updateUserUseCase = new UpdateUserUseCase(
+        userRepository,
+        passwordHasher,
+      );
+      const deleteUserUseCase = new DeleteUserUseCase(userRepository);
 
-    return new UserController(
-      createUserUseCase,
-      getAllUsersUseCase,
-      getUserByIdUseCase,
-      updateUserUseCase,
-      deleteUserUseCase,
-    );
+      this.userController = new UserController(
+        createUserUseCase,
+        getAllUsersUseCase,
+        getUserByIdUseCase,
+        updateUserUseCase,
+        deleteUserUseCase,
+      );
+    }
+    return this.userController;
   }
 }

@@ -38,15 +38,7 @@ export class RemoveRoleUseCase
       const deleted = await this.userRoleRepository.deleteByUserAndRole(
         input.userId,
         input.roleId,
-        {
-          ...input.auditContext,
-          payload: {
-            userId: input.userId,
-            roleId: input.roleId,
-            action: "ROLE_REMOVED",
-            previousState: existingUserRole.toJSON(),
-          },
-        },
+        input.auditContext,
       );
 
       if (!deleted) {

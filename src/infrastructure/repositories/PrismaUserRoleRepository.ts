@@ -1,8 +1,9 @@
 import { UserRole } from "@/domain/entities/UserRole";
 import type { IUserRoleRepository } from "@/domain/interfaces/IUserRoleRepository";
 import { prisma } from "@/infrastructure/database/prisma";
+import { createAuditLog } from "@/infrastructure/helpers/auditHelper";
+import { ENTITY_NAMES } from "@/shared/constants/entities";
 import type { AuditContext } from "@/shared/types/auditContext";
-import { formatPayloadForAudit } from "@/shared/types/auditContext";
 
 export class PrismaUserRoleRepository implements IUserRoleRepository {
   async findAll(): Promise<UserRole[]> {
@@ -94,7 +95,10 @@ export class PrismaUserRoleRepository implements IUserRoleRepository {
     });
   }
 
-  async create(userRole: UserRole, auditCtx?: AuditContext): Promise<UserRole> {
+  async create(
+    userRole: UserRole,
+    auditContext?: AuditContext,
+  ): Promise<UserRole> {
     const created = await prisma.$transaction(async (tx) => {
       const dbUserRole = await tx.userRole.create({
         data: {
@@ -108,17 +112,13 @@ export class PrismaUserRoleRepository implements IUserRoleRepository {
         },
       });
 
-      await tx.audit.create({
-        data: {
-          entity: "UserRole",
-          entityId: dbUserRole.id,
-          action: "CREATE",
-          userId: auditCtx?.performedByUserId ?? null,
-          ip: auditCtx?.ip ?? null,
-          userAgent: auditCtx?.userAgent ?? null,
-          payload: formatPayloadForAudit(auditCtx?.payload),
-        },
-      });
+      await createAuditLog(
+        tx,
+        ENTITY_NAMES.USER_ROLE,
+        dbUserRole.id,
+        "CREATE",
+        auditContext,
+      );
 
       return dbUserRole;
     });
@@ -137,7 +137,7 @@ export class PrismaUserRoleRepository implements IUserRoleRepository {
   async deleteByUserAndRole(
     userId: string,
     roleId: string,
-    auditCtx?: AuditContext,
+    auditContext?: AuditContext,
   ): Promise<boolean> {
     try {
       await prisma.$transaction(async (tx) => {
@@ -164,17 +164,13 @@ export class PrismaUserRoleRepository implements IUserRoleRepository {
           data: { isActive: false },
         });
 
-        await tx.audit.create({
-          data: {
-            entity: "UserRole",
-            entityId: userRole.id,
-            action: "DELETE",
-            userId: auditCtx?.performedByUserId ?? null,
-            ip: auditCtx?.ip ?? null,
-            userAgent: auditCtx?.userAgent ?? null,
-            payload: formatPayloadForAudit(auditCtx?.payload),
-          },
-        });
+        await createAuditLog(
+          tx,
+          ENTITY_NAMES.USER_ROLE,
+          userRole.id,
+          "SOFT_DELETE",
+          auditContext,
+        );
       });
 
       return true;
@@ -188,7 +184,7 @@ export class PrismaUserRoleRepository implements IUserRoleRepository {
 
   async deleteAllByUserId(
     userId: string,
-    auditCtx?: AuditContext,
+    auditContext?: AuditContext,
   ): Promise<number> {
     const result = await prisma.$transaction(async (tx) => {
       const userRoles = await tx.userRole.findMany({
@@ -201,17 +197,13 @@ export class PrismaUserRoleRepository implements IUserRoleRepository {
       });
 
       for (const userRole of userRoles) {
-        await tx.audit.create({
-          data: {
-            entity: "UserRole",
-            entityId: userRole.id,
-            action: "DELETE",
-            userId: auditCtx?.performedByUserId ?? null,
-            ip: auditCtx?.ip ?? null,
-            userAgent: auditCtx?.userAgent ?? null,
-            payload: formatPayloadForAudit(auditCtx?.payload),
-          },
-        });
+        await createAuditLog(
+          tx,
+          ENTITY_NAMES.USER_ROLE,
+          userRole.id,
+          "SOFT_DELETE",
+          auditContext,
+        );
       }
 
       return deleteResult.count;
@@ -222,7 +214,7 @@ export class PrismaUserRoleRepository implements IUserRoleRepository {
 
   async deleteAllByRoleId(
     roleId: string,
-    auditCtx?: AuditContext,
+    auditContext?: AuditContext,
   ): Promise<number> {
     const result = await prisma.$transaction(async (tx) => {
       const userRoles = await tx.userRole.findMany({
@@ -235,17 +227,13 @@ export class PrismaUserRoleRepository implements IUserRoleRepository {
       });
 
       for (const userRole of userRoles) {
-        await tx.audit.create({
-          data: {
-            entity: "UserRole",
-            entityId: userRole.id,
-            action: "DELETE",
-            userId: auditCtx?.performedByUserId ?? null,
-            ip: auditCtx?.ip ?? null,
-            userAgent: auditCtx?.userAgent ?? null,
-            payload: formatPayloadForAudit(auditCtx?.payload),
-          },
-        });
+        await createAuditLog(
+          tx,
+          ENTITY_NAMES.USER_ROLE,
+          userRole.id,
+          "SOFT_DELETE",
+          auditContext,
+        );
       }
 
       return deleteResult.count;

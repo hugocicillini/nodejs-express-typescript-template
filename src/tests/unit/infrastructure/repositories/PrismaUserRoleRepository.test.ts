@@ -8,10 +8,18 @@ vi.mock("@/infrastructure/database/prisma", () => ({
   prisma: {
     userRole: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
+    },
+    user: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    role: {
+      findFirst: vi.fn(),
     },
     audit: {
       create: vi.fn(),
@@ -146,16 +154,13 @@ describe("PrismaUserRoleRepository", () => {
 
   describe("findByUserAndRole", () => {
     it("should return user role when found", async () => {
-      // Arrange
       vi.mocked(prisma.userRole.findUnique).mockResolvedValue(mockUserRoleData);
 
-      // Act
       const result = await repository.findByUserAndRole(
         mockUserRoleData.userId,
         mockUserRoleData.roleId,
       );
 
-      // Assert
       expect(prisma.userRole.findUnique).toHaveBeenCalledWith({
         where: {
           userId_roleId: {
@@ -171,62 +176,57 @@ describe("PrismaUserRoleRepository", () => {
     });
 
     it("should return null when user role not found", async () => {
-      // Arrange
       vi.mocked(prisma.userRole.findUnique).mockResolvedValue(null);
 
-      // Act
       const result = await repository.findByUserAndRole("user-id", "role-id");
 
-      // Assert
       expect(result).toBeNull();
     });
   });
 
   describe("create", () => {
     it("should create user role and audit log", async () => {
-      // Arrange
       const userRole = UserRole.create(mockUserRoleData);
 
       vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
         const tx = {
-          userRole: { create: vi.fn().mockResolvedValue(mockUserRoleData) },
+          userRole: {
+            create: vi.fn().mockResolvedValue(mockUserRoleData),
+          },
           audit: { create: vi.fn().mockResolvedValue({}) },
         };
         return callback(tx as any);
       });
 
-      // Act
       const result = await repository.create(userRole, mockAuditContext);
 
-      // Assert
       expect(prisma.$transaction).toHaveBeenCalled();
       expect(result).toBeInstanceOf(UserRole);
       expect(result.id).toBe(mockUserRoleData.id);
     });
 
     it("should create user role without audit context", async () => {
-      // Arrange
       const userRole = UserRole.create(mockUserRoleData);
 
       vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
         const tx = {
-          userRole: { create: vi.fn().mockResolvedValue(mockUserRoleData) },
+          userRole: {
+            create: vi.fn().mockResolvedValue(mockUserRoleData),
+          },
           audit: { create: vi.fn().mockResolvedValue({}) },
         };
         return callback(tx as any);
       });
 
-      // Act
       const result = await repository.create(userRole);
 
-      // Assert
+      expect(prisma.$transaction).toHaveBeenCalled();
       expect(result).toBeInstanceOf(UserRole);
     });
   });
 
   describe("deleteByUserAndRole", () => {
     it("should delete user role and create audit log", async () => {
-      // Arrange
       vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
         const tx = {
           userRole: {
@@ -240,20 +240,17 @@ describe("PrismaUserRoleRepository", () => {
         return callback(tx as any);
       });
 
-      // Act
       const result = await repository.deleteByUserAndRole(
         mockUserRoleData.userId,
         mockUserRoleData.roleId,
         mockAuditContext,
       );
 
-      // Assert
       expect(prisma.$transaction).toHaveBeenCalled();
       expect(result).toBe(true);
     });
 
     it("should return false when user role not found", async () => {
-      // Arrange
       vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
         const tx = {
           userRole: {
@@ -263,8 +260,6 @@ describe("PrismaUserRoleRepository", () => {
         };
         return callback(tx as any);
       });
-
-      // Act
       const result = await repository.deleteByUserAndRole("user-id", "role-id");
 
       // Assert
@@ -370,42 +365,33 @@ describe("PrismaUserRoleRepository", () => {
 
   describe("userHasRole", () => {
     it("should return true when user has active role", async () => {
-      // Arrange
       vi.mocked(prisma.userRole.findUnique).mockResolvedValue(mockUserRoleData);
 
-      // Act
       const result = await repository.userHasRole(
         mockUserRoleData.userId,
         mockUserRoleData.roleId,
       );
 
-      // Assert
       expect(result).toBe(true);
     });
 
     it("should return false when user does not have role", async () => {
-      // Arrange
       vi.mocked(prisma.userRole.findUnique).mockResolvedValue(null);
 
-      // Act
       const result = await repository.userHasRole("user-id", "role-id");
 
-      // Assert
       expect(result).toBe(false);
     });
 
     it("should return false when user role is inactive", async () => {
-      // Arrange
       const inactiveUserRole = { ...mockUserRoleData, isActive: false };
       vi.mocked(prisma.userRole.findUnique).mockResolvedValue(inactiveUserRole);
 
-      // Act
       const result = await repository.userHasRole(
         mockUserRoleData.userId,
         mockUserRoleData.roleId,
       );
 
-      // Assert
       expect(result).toBe(false);
     });
   });

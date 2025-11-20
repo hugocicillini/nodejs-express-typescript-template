@@ -1,8 +1,9 @@
 import { User } from "@/domain/entities/User";
 import type { IUserRepository } from "@/domain/interfaces/IUserRepository";
 import type { AuditContext } from "@/shared/types/auditContext";
-import { formatPayloadForAudit } from "@/shared/types/auditContext";
+import { createAuditLog } from "@/infrastructure/helpers/auditHelper";
 import { prisma } from "@/infrastructure/database/prisma";
+import { ENTITY_NAMES } from "@/shared/constants/entities";
 
 export class PrismaUserRepository implements IUserRepository {
   async findAll(): Promise<User[]> {
@@ -65,7 +66,7 @@ export class PrismaUserRepository implements IUserRepository {
     });
   }
 
-  async create(user: User, auditCtx?: AuditContext): Promise<User> {
+  async create(user: User, auditContext?: AuditContext): Promise<User> {
     const created = await prisma.$transaction(async (tx) => {
       const dbUser = await tx.user.create({
         data: {
@@ -80,17 +81,13 @@ export class PrismaUserRepository implements IUserRepository {
         },
       });
 
-      await tx.audit.create({
-        data: {
-          entity: "User",
-          entityId: dbUser.id,
-          action: "CREATE",
-          userId: auditCtx?.performedByUserId ?? null,
-          ip: auditCtx?.ip ?? null,
-          userAgent: auditCtx?.userAgent ?? null,
-          payload: formatPayloadForAudit(auditCtx?.payload),
-        },
-      });
+      await createAuditLog(
+        tx,
+        ENTITY_NAMES.USER,
+        dbUser.id,
+        "CREATE",
+        auditContext,
+      );
 
       return dbUser;
     });
@@ -107,7 +104,7 @@ export class PrismaUserRepository implements IUserRepository {
     });
   }
 
-  async update(user: User, auditCtx?: AuditContext): Promise<User> {
+  async update(user: User, auditContext?: AuditContext): Promise<User> {
     const updated = await prisma.$transaction(async (tx) => {
       const dbUser = await tx.user.update({
         where: { id: user.id },
@@ -120,17 +117,13 @@ export class PrismaUserRepository implements IUserRepository {
         },
       });
 
-      await tx.audit.create({
-        data: {
-          entity: "User",
-          entityId: dbUser.id,
-          action: "UPDATE",
-          userId: auditCtx?.performedByUserId ?? null,
-          ip: auditCtx?.ip ?? null,
-          userAgent: auditCtx?.userAgent ?? null,
-          payload: formatPayloadForAudit(auditCtx?.payload),
-        },
-      });
+      await createAuditLog(
+        tx,
+        ENTITY_NAMES.USER,
+        dbUser.id,
+        "UPDATE",
+        auditContext,
+      );
 
       return dbUser;
     });
@@ -147,7 +140,7 @@ export class PrismaUserRepository implements IUserRepository {
     });
   }
 
-  async delete(id: string, auditCtx?: AuditContext): Promise<void> {
+  async delete(id: string, auditContext?: AuditContext): Promise<void> {
     await prisma.$transaction(async (tx) => {
       const dbUser = await tx.user.update({
         where: { id },
@@ -157,17 +150,13 @@ export class PrismaUserRepository implements IUserRepository {
         },
       });
 
-      await tx.audit.create({
-        data: {
-          entity: "User",
-          entityId: dbUser.id,
-          action: "SOFT_DELETE",
-          userId: auditCtx?.performedByUserId ?? null,
-          ip: auditCtx?.ip ?? null,
-          userAgent: auditCtx?.userAgent ?? null,
-          payload: formatPayloadForAudit(auditCtx?.payload),
-        },
-      });
+      await createAuditLog(
+        tx,
+        ENTITY_NAMES.USER,
+        dbUser.id,
+        "SOFT_DELETE",
+        auditContext,
+      );
     });
   }
 }

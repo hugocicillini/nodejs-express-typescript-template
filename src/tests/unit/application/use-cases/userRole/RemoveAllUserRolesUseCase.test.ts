@@ -70,12 +70,7 @@ describe("RemoveAllUserRolesUseCase", () => {
       expect(result.responseObject?.count).toBe(2);
       expect(mockUserRoleRepository.deleteAllByUserId).toHaveBeenCalledWith(
         input.userId,
-        expect.objectContaining({
-          payload: expect.objectContaining({
-            userId: input.userId,
-            action: "ALL_ROLES_REMOVED",
-          }),
-        }),
+        input.auditContext,
       );
     });
 

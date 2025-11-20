@@ -1,9 +1,9 @@
 import type { IUseCase } from "@/application/interfaces/IUseCase";
 import { ServiceResponse } from "@/application/models/serviceResponse";
 import { UserRole } from "@/domain/entities/UserRole";
-import type { IRoleRepository } from "@/domain/interfaces/IRoleRepository";
-import type { IUserRepository } from "@/domain/interfaces/IUserRepository";
 import type { IUserRoleRepository } from "@/domain/interfaces/IUserRoleRepository";
+import type { IUserRepository } from "@/domain/interfaces/IUserRepository";
+import type { IRoleRepository } from "@/domain/interfaces/IRoleRepository";
 import type { AuditContext } from "@/shared/types/auditContext";
 import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
@@ -30,8 +30,9 @@ export class AssignRoleUseCase
 
   async execute(input: AssignRoleInput): Promise<AssignRoleOutput> {
     try {
+      // Validate user exists and is active
       const user = await this.userRepository.findById(input.userId);
-      if (!user) {
+      if (!user || !user.isActive) {
         return ServiceResponse.failure(
           "User not found",
           null,
@@ -39,8 +40,9 @@ export class AssignRoleUseCase
         );
       }
 
+      // Validate role exists and is active
       const role = await this.roleRepository.findById(input.roleId);
-      if (!role) {
+      if (!role || !role.isActive) {
         return ServiceResponse.failure(
           "Role not found",
           null,
@@ -48,6 +50,7 @@ export class AssignRoleUseCase
         );
       }
 
+      // Check if user already has this role
       const existingUserRole = await this.userRoleRepository.findByUserAndRole(
         input.userId,
         input.roleId,
@@ -61,22 +64,6 @@ export class AssignRoleUseCase
         );
       }
 
-      // const userCurrentRoles = await this.userRoleRepository.findByUserId(
-      //   input.userId
-      // );
-
-      // if (userCurrentRoles && userCurrentRoles.length > 0) {
-      //   const activeRoles = userCurrentRoles.filter((ur) => ur.isActive);
-
-      //   if (activeRoles.length > 0) {
-      //     return ServiceResponse.failure(
-      //       'User already has an active role assigned. Please remove it before assigning a new one.',
-      //       null,
-      //       StatusCodes.CONFLICT
-      //     );
-      //   }
-      // }
-
       const userRole = UserRole.create({
         id: crypto.randomUUID(),
         userId: input.userId,
@@ -87,14 +74,10 @@ export class AssignRoleUseCase
         isActive: true,
       });
 
-      const createdUserRole = await this.userRoleRepository.create(userRole, {
-        ...input.auditContext,
-        payload: {
-          userId: input.userId,
-          roleId: input.roleId,
-          action: "ROLE_ASSIGNED",
-        },
-      });
+      const createdUserRole = await this.userRoleRepository.create(
+        userRole,
+        input.auditContext,
+      );
 
       return ServiceResponse.success(
         "Role assigned to user successfully",

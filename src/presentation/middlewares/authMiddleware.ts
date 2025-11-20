@@ -1,8 +1,8 @@
-import { verifyAccessToken } from '@/shared/utils/jwt';
-import type { NextFunction, Request, Response } from 'express';
+import { verifyAccessToken } from "@/shared/utils/jwt";
+import type { NextFunction, Request, Response } from "express";
 
 // Estende o tipo Request do Express para incluir user
-declare module 'express-serve-static-core' {
+declare module "express-serve-static-core" {
   interface Request {
     user?: {
       id: string;
@@ -20,20 +20,20 @@ declare module 'express-serve-static-core' {
 export const requireAuth = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: 'Access token not provided',
+        message: "Access token not provided",
         statusCode: 401,
       });
     }
 
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.replace("Bearer ", "");
 
     const payload = verifyAccessToken(token);
 
@@ -49,7 +49,7 @@ export const requireAuth = (
     const message =
       error instanceof Error
         ? error.message
-        : 'Invalid or expired access token';
+        : "Invalid or expired access token";
 
     return res.status(401).json({
       success: false,
@@ -68,7 +68,7 @@ export const requireRole = (allowedRoles: string[]) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication required',
+        message: "Authentication required",
         statusCode: 401,
       });
     }
@@ -79,7 +79,7 @@ export const requireRole = (allowedRoles: string[]) => {
     if (!hasRole) {
       return res.status(403).json({
         success: false,
-        message: 'Insufficient permissions',
+        message: "Insufficient permissions",
         requiredRoles: allowedRoles,
         userRoles: userRoles,
         statusCode: 403,
@@ -99,13 +99,13 @@ export const requireRole = (allowedRoles: string[]) => {
 export const optionalAuth = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.replace('Bearer ', '');
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
       const payload = verifyAccessToken(token);
 
       req.user = {

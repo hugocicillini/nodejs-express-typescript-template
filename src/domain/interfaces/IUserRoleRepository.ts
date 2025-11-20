@@ -6,13 +6,19 @@ export interface IUserRoleRepository {
   findByUserId(userId: string): Promise<UserRole[]>;
   findByRoleId(roleId: string): Promise<UserRole[]>;
   findByUserAndRole(userId: string, roleId: string): Promise<UserRole | null>;
-  create(userRole: UserRole, auditCtx?: AuditContext): Promise<UserRole>;
+  create(userRole: UserRole, auditContext?: AuditContext): Promise<UserRole>;
   deleteByUserAndRole(
     userId: string,
     roleId: string,
-    auditCtx?: AuditContext,
+    auditContext?: AuditContext,
   ): Promise<boolean>;
-  deleteAllByUserId(userId: string, auditCtx?: AuditContext): Promise<number>;
-  deleteAllByRoleId(roleId: string, auditCtx?: AuditContext): Promise<number>;
+  deleteAllByUserId(
+    userId: string,
+    auditContext?: AuditContext,
+  ): Promise<number>;
+  deleteAllByRoleId(
+    roleId: string,
+    auditContext?: AuditContext,
+  ): Promise<number>;
   userHasRole(userId: string, roleId: string): Promise<boolean>;
 }

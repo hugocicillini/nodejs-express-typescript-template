@@ -209,6 +209,7 @@ describe("LoginUseCase", () => {
           userId: mockUser.id,
           token: "refresh-token",
         }),
+        input.auditContext,
       );
     });
 
