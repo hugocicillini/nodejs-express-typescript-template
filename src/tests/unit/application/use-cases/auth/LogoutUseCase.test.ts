@@ -41,6 +41,7 @@ describe("LogoutUseCase", () => {
       expect(result.message).toBe("Logout successful");
       expect(mockRefreshTokenRepository.deleteByToken).toHaveBeenCalledWith(
         input.refreshToken,
+        input.auditContext,
       );
       expect(
         mockRefreshTokenRepository.deleteAllByUserId,
@@ -66,6 +67,7 @@ describe("LogoutUseCase", () => {
       expect(result.message).toBe("Logout successful");
       expect(mockRefreshTokenRepository.deleteAllByUserId).toHaveBeenCalledWith(
         input.userId,
+        input.auditContext,
       );
       expect(mockRefreshTokenRepository.deleteByToken).not.toHaveBeenCalled();
     });

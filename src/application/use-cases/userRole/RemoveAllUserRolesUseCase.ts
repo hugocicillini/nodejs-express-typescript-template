@@ -42,17 +42,7 @@ export class RemoveAllUserRolesUseCase
 
       const deletedCount = await this.userRoleRepository.deleteAllByUserId(
         input.userId,
-        {
-          ...input.auditContext,
-          payload: {
-            userId: input.userId,
-            action: "ALL_ROLES_REMOVED",
-            removedRoles: currentRoles.map((ur) => ({
-              roleId: ur.roleId,
-            })),
-            count: currentRoles.length,
-          },
-        },
+        input.auditContext,
       );
 
       return ServiceResponse.success(

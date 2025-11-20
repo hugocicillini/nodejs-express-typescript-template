@@ -5,7 +5,7 @@ export interface IRoleRepository {
   findAll(): Promise<Role[]>;
   findById(id: string): Promise<Role | null>;
   findByName(name: string): Promise<Role | null>;
-  create(role: Role, auditCtx?: AuditContext): Promise<Role>;
-  update(role: Role, auditCtx?: AuditContext): Promise<Role>;
-  delete(id: string, auditCtx?: AuditContext): Promise<void>;
+  create(role: Role, auditContext?: AuditContext): Promise<Role>;
+  update(role: Role, auditContext?: AuditContext): Promise<Role>;
+  delete(id: string, auditContext?: AuditContext): Promise<void>;
 }

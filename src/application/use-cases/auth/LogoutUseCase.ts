@@ -1,11 +1,13 @@
 import type { IUseCase } from "@/application/interfaces/IUseCase";
 import { ServiceResponse } from "@/application/models/serviceResponse";
 import type { IRefreshTokenRepository } from "@/domain/interfaces/IRefreshTokenRepository";
+import type { AuditContext } from "@/shared/types/auditContext";
 import { StatusCodes } from "http-status-codes";
 
 export interface LogoutInput {
   userId: string;
-  refreshToken?: string; // opcional - pode invalidar apenas um ou todos
+  refreshToken?: string;
+  auditContext?: AuditContext;
 }
 
 export interface LogoutOutput {
@@ -23,11 +25,15 @@ export class LogoutUseCase implements IUseCase<LogoutInput, LogoutResponse> {
   async execute(input: LogoutInput): Promise<LogoutResponse> {
     try {
       if (input.refreshToken) {
-        // Invalidar apenas o token específico
-        await this.refreshTokenRepository.deleteByToken(input.refreshToken);
+        await this.refreshTokenRepository.deleteByToken(
+          input.refreshToken,
+          input.auditContext,
+        );
       } else {
-        // Invalidar todos os tokens do usuário
-        await this.refreshTokenRepository.deleteAllByUserId(input.userId);
+        await this.refreshTokenRepository.deleteAllByUserId(
+          input.userId,
+          input.auditContext,
+        );
       }
 
       return ServiceResponse.success(

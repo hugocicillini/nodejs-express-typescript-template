@@ -1,9 +1,10 @@
-import { Role } from '@/domain/entities/Role';
-import type { IRoleRepository } from '@/domain/interfaces/IRoleRepository';
-import { RoleName } from '@/domain/value-objects/RoleName';
-import { prisma } from '@/infrastructure/database/prisma';
-import type { AuditContext } from '@/shared/types/auditContext';
-import { formatPayloadForAudit } from '@/shared/types/auditContext';
+import { Role } from "@/domain/entities/Role";
+import type { IRoleRepository } from "@/domain/interfaces/IRoleRepository";
+import { RoleName } from "@/domain/value-objects/RoleName";
+import { prisma } from "@/infrastructure/database/prisma";
+import { createAuditLog } from "@/infrastructure/helpers/auditHelper";
+import type { AuditContext } from "@/shared/types/auditContext";
+import { ENTITY_NAMES } from "@/shared/constants/entities";
 
 export class PrismaRoleRepository implements IRoleRepository {
   async findAll(): Promise<Role[]> {
@@ -23,7 +24,7 @@ export class PrismaRoleRepository implements IRoleRepository {
         createdAt: role.createdAt,
         updatedAt: role.updatedAt,
         deletedAt: role.deletedAt,
-      })
+      }),
     );
   }
 
@@ -62,7 +63,7 @@ export class PrismaRoleRepository implements IRoleRepository {
     });
   }
 
-  async create(role: Role, auditCtx?: AuditContext): Promise<Role> {
+  async create(role: Role, auditContext?: AuditContext): Promise<Role> {
     const created = await prisma.$transaction(async (tx) => {
       const dbRole = await tx.role.create({
         data: {
@@ -76,17 +77,13 @@ export class PrismaRoleRepository implements IRoleRepository {
         },
       });
 
-      await tx.audit.create({
-        data: {
-          entity: 'Role',
-          entityId: dbRole.id,
-          action: 'CREATE',
-          userId: auditCtx?.performedByUserId ?? null,
-          ip: auditCtx?.ip ?? null,
-          userAgent: auditCtx?.userAgent ?? null,
-          payload: formatPayloadForAudit(auditCtx?.payload),
-        },
-      });
+      await createAuditLog(
+        tx,
+        ENTITY_NAMES.ROLE,
+        dbRole.id,
+        "CREATE",
+        auditContext,
+      );
 
       return dbRole;
     });
@@ -102,7 +99,7 @@ export class PrismaRoleRepository implements IRoleRepository {
     });
   }
 
-  async update(role: Role, auditCtx?: AuditContext): Promise<Role> {
+  async update(role: Role, auditContext?: AuditContext): Promise<Role> {
     const updated = await prisma.$transaction(async (tx) => {
       const dbRole = await tx.role.update({
         where: { id: role.id },
@@ -115,17 +112,13 @@ export class PrismaRoleRepository implements IRoleRepository {
         },
       });
 
-      await tx.audit.create({
-        data: {
-          entity: 'Role',
-          entityId: dbRole.id,
-          action: 'UPDATE',
-          userId: auditCtx?.performedByUserId ?? null,
-          ip: auditCtx?.ip ?? null,
-          userAgent: auditCtx?.userAgent ?? null,
-          payload: formatPayloadForAudit(auditCtx?.payload),
-        },
-      });
+      await createAuditLog(
+        tx,
+        ENTITY_NAMES.ROLE,
+        dbRole.id,
+        "UPDATE",
+        auditContext,
+      );
 
       return dbRole;
     });
@@ -141,7 +134,7 @@ export class PrismaRoleRepository implements IRoleRepository {
     });
   }
 
-  async delete(id: string, auditCtx?: AuditContext): Promise<void> {
+  async delete(id: string, auditContext?: AuditContext): Promise<void> {
     await prisma.$transaction(async (tx) => {
       const dbRole = await tx.role.update({
         where: { id },
@@ -151,17 +144,13 @@ export class PrismaRoleRepository implements IRoleRepository {
         },
       });
 
-      await tx.audit.create({
-        data: {
-          entity: 'Role',
-          entityId: dbRole.id,
-          action: 'SOFT_DELETE',
-          userId: auditCtx?.performedByUserId ?? null,
-          ip: auditCtx?.ip ?? null,
-          userAgent: auditCtx?.userAgent ?? null,
-          payload: formatPayloadForAudit(auditCtx?.payload),
-        },
-      });
+      await createAuditLog(
+        tx,
+        ENTITY_NAMES.ROLE,
+        dbRole.id,
+        "SOFT_DELETE",
+        auditContext,
+      );
     });
   }
 }

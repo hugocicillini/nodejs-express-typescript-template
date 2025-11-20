@@ -7,12 +7,14 @@ import type { IPasswordHasher } from "@/domain/interfaces/IPasswordHasher";
 import type { IRefreshTokenRepository } from "@/domain/interfaces/IRefreshTokenRepository";
 import type { IUserRepository } from "@/domain/interfaces/IUserRepository";
 import type { IUserRoleRepository } from "@/domain/interfaces/IUserRoleRepository";
+import type { AuditContext } from "@/shared/types/auditContext";
 import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
 
 export interface LoginInput {
   email: string;
   password: string;
+  auditContext?: AuditContext;
 }
 
 export interface LoginOutput {
@@ -96,7 +98,10 @@ export class LoginUseCase implements IUseCase<LoginInput, LoginResponse> {
         deletedAt: null,
       });
 
-      await this.refreshTokenRepository.create(refreshToken);
+      await this.refreshTokenRepository.create(
+        refreshToken,
+        input.auditContext,
+      );
 
       return ServiceResponse.success(
         "Login successful",

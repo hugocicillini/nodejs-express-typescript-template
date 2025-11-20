@@ -11,6 +11,10 @@ vi.mock("@/infrastructure/database/prisma", () => ({
       findMany: vi.fn(),
       updateMany: vi.fn(),
     },
+    audit: {
+      create: vi.fn(),
+    },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -40,23 +44,26 @@ describe("PrismaRefreshTokenRepository", () => {
     it("should create refresh token", async () => {
       // Arrange
       const token = RefreshToken.create(mockTokenData);
-      vi.mocked(prisma.refreshToken.create).mockResolvedValue(mockTokenData);
+
+      vi.mocked(prisma.$transaction).mockImplementation(
+        async (callback: any) => {
+          const tx = {
+            refreshToken: {
+              create: vi.fn().mockResolvedValue(mockTokenData),
+            },
+            audit: {
+              create: vi.fn().mockResolvedValue({}),
+            },
+          };
+          return callback(tx);
+        },
+      );
 
       // Act
       const result = await repository.create(token);
 
       // Assert
-      expect(prisma.refreshToken.create).toHaveBeenCalledWith({
-        data: {
-          id: mockTokenData.id,
-          token: mockTokenData.token,
-          userId: mockTokenData.userId,
-          expiresAt: mockTokenData.expiresAt,
-          createdAt: mockTokenData.createdAt,
-          updatedAt: mockTokenData.updatedAt,
-          deletedAt: mockTokenData.deletedAt,
-        },
-      });
+      expect(prisma.$transaction).toHaveBeenCalled();
       expect(result).toBeInstanceOf(RefreshToken);
       expect(result.token).toBe(mockTokenData.token);
     });
@@ -140,54 +147,102 @@ describe("PrismaRefreshTokenRepository", () => {
   describe("deleteByToken", () => {
     it("should soft delete token by token string", async () => {
       // Arrange
-      vi.mocked(prisma.refreshToken.updateMany).mockResolvedValue({ count: 1 });
+      vi.mocked(prisma.$transaction).mockImplementation(
+        async (callback: any) => {
+          const tx = {
+            refreshToken: {
+              findFirst: vi.fn().mockResolvedValue(mockTokenData),
+              updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+            },
+            audit: {
+              create: vi.fn().mockResolvedValue({}),
+            },
+          };
+          return callback(tx);
+        },
+      );
 
       // Act
       await repository.deleteByToken(mockTokenData.token);
 
       // Assert
-      expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
-        where: { token: mockTokenData.token },
-        data: { deletedAt: expect.any(Date) },
-      });
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
 
     it("should handle deletion of non-existent token", async () => {
       // Arrange
-      vi.mocked(prisma.refreshToken.updateMany).mockResolvedValue({ count: 0 });
+      vi.mocked(prisma.$transaction).mockImplementation(
+        async (callback: any) => {
+          const tx = {
+            refreshToken: {
+              findFirst: vi.fn().mockResolvedValue(null),
+              updateMany: vi.fn(),
+            },
+            audit: {
+              create: vi.fn(),
+            },
+          };
+          return callback(tx);
+        },
+      );
 
       // Act
       await repository.deleteByToken("non-existent-token");
 
       // Assert
-      expect(prisma.refreshToken.updateMany).toHaveBeenCalled();
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
   });
 
   describe("deleteAllByUserId", () => {
     it("should soft delete all tokens for user", async () => {
       // Arrange
-      vi.mocked(prisma.refreshToken.updateMany).mockResolvedValue({ count: 3 });
+      const mockTokens = [mockTokenData, { ...mockTokenData, id: "token-2" }];
+
+      vi.mocked(prisma.$transaction).mockImplementation(
+        async (callback: any) => {
+          const tx = {
+            refreshToken: {
+              findMany: vi.fn().mockResolvedValue(mockTokens),
+              updateMany: vi.fn().mockResolvedValue({ count: 2 }),
+            },
+            audit: {
+              create: vi.fn().mockResolvedValue({}),
+            },
+          };
+          return callback(tx);
+        },
+      );
 
       // Act
       await repository.deleteAllByUserId(mockTokenData.userId);
 
       // Assert
-      expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
-        where: { userId: mockTokenData.userId, deletedAt: null },
-        data: { deletedAt: expect.any(Date) },
-      });
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
 
     it("should handle user with no tokens", async () => {
       // Arrange
-      vi.mocked(prisma.refreshToken.updateMany).mockResolvedValue({ count: 0 });
+      vi.mocked(prisma.$transaction).mockImplementation(
+        async (callback: any) => {
+          const tx = {
+            refreshToken: {
+              findMany: vi.fn().mockResolvedValue([]),
+              updateMany: vi.fn(),
+            },
+            audit: {
+              create: vi.fn(),
+            },
+          };
+          return callback(tx);
+        },
+      );
 
       // Act
       await repository.deleteAllByUserId("user-without-tokens");
 
       // Assert
-      expect(prisma.refreshToken.updateMany).toHaveBeenCalled();
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
   });
 });

@@ -8,6 +8,7 @@ import { RoleController } from "@/presentation/controllers/RoleController";
 
 export class RoleModule {
   private static roleRepository: PrismaRoleRepository;
+  private static roleController: RoleController;
 
   static getRoleRepository(): PrismaRoleRepository {
     if (!this.roleRepository) {
@@ -17,20 +18,23 @@ export class RoleModule {
   }
 
   static getRoleController(): RoleController {
-    const roleRepository = this.getRoleRepository();
+    if (!this.roleController) {
+      const roleRepository = this.getRoleRepository();
 
-    const createRoleUseCase = new CreateRoleUseCase(roleRepository);
-    const getAllRolesUseCase = new GetAllRolesUseCase(roleRepository);
-    const getRoleByIdUseCase = new GetRoleByIdUseCase(roleRepository);
-    const updateRoleUseCase = new UpdateRoleUseCase(roleRepository);
-    const deleteRoleUseCase = new DeleteRoleUseCase(roleRepository);
+      const createRoleUseCase = new CreateRoleUseCase(roleRepository);
+      const getAllRolesUseCase = new GetAllRolesUseCase(roleRepository);
+      const getRoleByIdUseCase = new GetRoleByIdUseCase(roleRepository);
+      const updateRoleUseCase = new UpdateRoleUseCase(roleRepository);
+      const deleteRoleUseCase = new DeleteRoleUseCase(roleRepository);
 
-    return new RoleController(
-      createRoleUseCase,
-      getAllRolesUseCase,
-      getRoleByIdUseCase,
-      updateRoleUseCase,
-      deleteRoleUseCase,
-    );
+      this.roleController = new RoleController(
+        createRoleUseCase,
+        getAllRolesUseCase,
+        getRoleByIdUseCase,
+        updateRoleUseCase,
+        deleteRoleUseCase,
+      );
+    }
+    return this.roleController;
   }
 }

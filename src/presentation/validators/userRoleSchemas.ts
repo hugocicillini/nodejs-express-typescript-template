@@ -2,22 +2,21 @@ import { z } from "zod";
 
 export const GetUserRolesSchema = z.object({
   params: z.object({
-    userId: z.string().uuid(),
+    userId: z.uuid(),
   }),
 });
 
 export const GetUsersByRoleSchema = z.object({
   params: z.object({
-    roleId: z.string().uuid(),
+    roleId: z.uuid(),
   }),
 });
 
 export const AssignRoleSchema = z.object({
   body: z.object({
-    userId: z.string().uuid(),
-    roleId: z.string().uuid(),
-    expiresAt: z
-      .string()
+    userId: z.uuid(),
+    roleId: z.uuid(),
+    expiresAt: z.iso
       .datetime()
       .transform((val) => new Date(val))
       .optional()
@@ -27,13 +26,13 @@ export const AssignRoleSchema = z.object({
 
 export const RemoveRoleSchema = z.object({
   params: z.object({
-    userId: z.string().uuid(),
-    roleId: z.string().uuid(),
+    userId: z.uuid(),
+    roleId: z.uuid(),
   }),
 });
 
 export const RemoveAllUserRolesSchema = z.object({
   params: z.object({
-    userId: z.string().uuid(),
+    userId: z.uuid(),
   }),
 });

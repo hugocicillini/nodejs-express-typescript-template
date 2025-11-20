@@ -15,9 +15,6 @@ export interface AuditContext {
   payload?: unknown;
 }
 
-/**
- * Transforma payload em formato compatível com JSON do Prisma
- */
 export function formatPayloadForAudit(payload: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(payload ?? {})) as Prisma.InputJsonValue;
 }

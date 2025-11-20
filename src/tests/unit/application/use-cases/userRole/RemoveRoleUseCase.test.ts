@@ -63,13 +63,7 @@ describe("RemoveRoleUseCase", () => {
       expect(mockUserRoleRepository.deleteByUserAndRole).toHaveBeenCalledWith(
         input.userId,
         input.roleId,
-        expect.objectContaining({
-          payload: expect.objectContaining({
-            userId: input.userId,
-            roleId: input.roleId,
-            action: "ROLE_REMOVED",
-          }),
-        }),
+        input.auditContext,
       );
     });
 
