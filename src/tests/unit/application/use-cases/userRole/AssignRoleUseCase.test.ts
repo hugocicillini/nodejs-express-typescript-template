@@ -10,6 +10,7 @@ import type { IUserRoleRepository } from "@/domain/interfaces/IUserRoleRepositor
 import type { IUserRepository } from "@/domain/interfaces/IUserRepository";
 import type { IRoleRepository } from "@/domain/interfaces/IRoleRepository";
 import { StatusCodes } from "http-status-codes";
+import { RoleName } from "@/domain/value-objects/RoleName";
 
 describe("AssignRoleUseCase", () => {
   let useCase: AssignRoleUseCase;
@@ -75,7 +76,7 @@ describe("AssignRoleUseCase", () => {
 
       const mockRole = Role.create({
         id: "role-123",
-        name: "ADMIN",
+        name: RoleName.ADMIN,
         description: "Admin role",
         isActive: true,
         createdAt: new Date(),
@@ -171,7 +172,7 @@ describe("AssignRoleUseCase", () => {
 
       const mockRole = Role.create({
         id: "role-123",
-        name: "ADMIN",
+        name: RoleName.ADMIN,
         description: "Admin role",
         isActive: true,
         createdAt: new Date(),
@@ -223,7 +224,7 @@ describe("AssignRoleUseCase", () => {
 
       const mockRole = Role.create({
         id: "role-123",
-        name: "ADMIN",
+        name: RoleName.ADMIN,
         description: "Admin role",
         isActive: true,
         createdAt: new Date(),
